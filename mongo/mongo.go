@@ -1,6 +1,9 @@
 package mongo
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/clouway/godb"
 	"gopkg.in/mgo.v2"
 )
@@ -13,11 +16,11 @@ type database struct {
 // NewDatabase establishes a new database connection using
 // configuration options in the provided config.
 func NewDatabase(config *godb.Config) godb.Database {
-	info := &mgo.DialInfo{Addrs: config.Addrs}
+	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: 5 * time.Second}
 	sess, err := mgo.DialWithInfo(info)
 
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("unable to connect to host '%s', failed with: %v", info.Addrs, err))
 	}
 
 	db := sess.DB(config.Database)
