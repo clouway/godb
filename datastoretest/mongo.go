@@ -1,6 +1,7 @@
 package datastoretest
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -40,20 +41,26 @@ func NewDatabaseWithHost(host string) *DB {
 
 	mgoDB := mongo.NewDatabase(config)
 
-	sess := connect(host)
+	sess, err := connect(host)
+	if err != nil {
+		panic(fmt.Errorf("could not establish connection: %v", err))
+	}
+	sess.SetMode(mgo.Strong, true)
 	database := sess.DB(name)
 
 	return &DB{mgoDB, database}
 }
 
+// Close closes DB connection
 func (db *DB) Close() {
 	db.database.Session.Close()
 }
 
+// Clean erases all database collections except system.
 func (db *DB) Clean() {
 	col, err := db.database.CollectionNames()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("could not get collection names: %v", err))
 	}
 
 	for _, v := range col {
@@ -61,18 +68,18 @@ func (db *DB) Clean() {
 			err := db.database.C(v).DropCollection()
 
 			if err != nil {
-				panic(err)
+				panic(fmt.Errorf("could not drop collection '%s': %v", v, err))
 			}
 		}
 	}
 }
 
-func connect(host string) *mgo.Session {
+func connect(host string) (*mgo.Session, error) {
 	sess, err := mgo.Dial(host)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return sess
+	return sess, nil
 }
