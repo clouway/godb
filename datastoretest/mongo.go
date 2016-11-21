@@ -39,7 +39,10 @@ func NewDatabaseWithHost(host string) *DB {
 		Database: name,
 	}
 
-	mgoDB := mongo.NewDatabase(config)
+	mgoDB, err := mongo.NewDatabase(config)
+	if err != nil {
+		panic(fmt.Errorf("could not establish connection: %v", err))
+	}
 
 	sess, err := connect(host)
 	if err != nil {

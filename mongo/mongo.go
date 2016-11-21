@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/clouway/godb"
@@ -15,17 +16,33 @@ type database struct {
 
 // NewDatabase establishes a new database connection using
 // configuration options in the provided config.
-func NewDatabase(config *godb.Config) godb.Database {
-	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: 5 * time.Second}
-	sess, err := mgo.DialWithInfo(info)
+// The MaxRetryAttempts option is used as limit of retry attemps. If limit is reached then
+// last returned error is returned and as result to indicate that communication with the database is failed
+func NewDatabase(config *godb.Config) (godb.Database, error) {
+	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: 2 * time.Second}
+	var sess *mgo.Session
+	var err error
+	sess, err = mgo.DialWithInfo(info)
 
 	if err != nil {
-		panic(fmt.Errorf("unable to connect to host '%s', failed with: %v", info.Addrs, err))
+		for attempts := 1; attempts <= config.MaxRetryAttempts; attempts++ {
+			sess, err = mgo.DialWithInfo(info)
+			if err == nil {
+				break
+			}
+
+			log.Printf("attempt[%d]: unable to connect to host '%s', failed with: %v\n", attempts, info.Addrs, err)
+			time.Sleep(time.Duration(attempts) * time.Second)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to connect to host '%s', failed with: %v", info.Addrs, err)
+		}
 	}
 
 	db := sess.DB(config.Database)
 
-	return &database{sess, db}
+	return &database{sess, db}, nil
 }
 
 func (db *database) Close() {
