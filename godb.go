@@ -54,10 +54,14 @@ type Bulk interface {
 	Update(pairs ...interface{})
 }
 
+// Config is a configuration object used for the communication with
+// the database
 type Config struct {
-	Addrs []string
+	Addrs []string // slice of hosts
 
-	Database string
+	Database string // name of the database
+
+	MaxRetryAttempts int // number of max retry attempts
 }
 
 type Change struct {
