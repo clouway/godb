@@ -3,12 +3,12 @@ package datastoretest
 import (
 	"fmt"
 	"os"
-	"strings"
-
-	"gopkg.in/mgo.v2"
+	"strconv"
+	"time"
 
 	"github.com/clouway/godb"
 	"github.com/clouway/godb/mongo"
+	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -20,8 +20,10 @@ type DB struct {
 	database *mgo.Database
 }
 
-// NewDatabase is establishing a new database connection using host from the environment.
-// The variable name for the host is TEST_DB_HOST.
+// NewDatabase is establishing a new database connection using host
+// from the environment. The variable name for the host is TEST_DB_HOST.
+// Testing database uses random database name to ensure consistency in tests.
+// The created database will be dropped after Clean/Drop function is called.
 func NewDatabase() *DB {
 	host := os.Getenv("TEST_DB_HOST")
 	if host == "" {
@@ -34,9 +36,11 @@ func NewDatabase() *DB {
 // NewDatabaseWithHost is establihing a new database connection
 // to the provided host
 func NewDatabaseWithHost(host string) *DB {
+	t := time.Now().Nanosecond()
+	dbName := name + strconv.FormatInt(t, 64)
 	config := &godb.Config{
 		Addrs:    []string{host},
-		Database: name,
+		Database: dbName,
 	}
 
 	mgoDB, err := mongo.NewDatabase(config)
@@ -61,19 +65,9 @@ func (db *DB) Close() {
 
 // Clean erases all database collections except system.
 func (db *DB) Clean() {
-	col, err := db.database.CollectionNames()
+	err := db.database.DropDatabase()
 	if err != nil {
-		panic(fmt.Errorf("could not get collection names: %v", err))
-	}
-
-	for _, v := range col {
-		if !strings.Contains(v, "system.") {
-			err := db.database.C(v).DropCollection()
-
-			if err != nil {
-				panic(fmt.Errorf("could not drop collection '%s': %v", v, err))
-			}
-		}
+		panic(fmt.Errorf("could nod drop database '%s': %v", db.database.Name, err))
 	}
 }
 
