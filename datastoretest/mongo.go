@@ -60,6 +60,7 @@ func NewDatabaseWithHost(host string) *DB {
 
 // Close closes DB connection
 func (db *DB) Close() {
+	db.Clean()
 	db.database.Session.Close()
 }
 
