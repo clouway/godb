@@ -37,7 +37,7 @@ func NewDatabase() *DB {
 // to the provided host
 func NewDatabaseWithHost(host string) *DB {
 	t := time.Now().Nanosecond()
-	dbName := name + strconv.FormatInt(t, 64)
+	dbName := name + strconv.Itoa(t)
 	config := &godb.Config{
 		Addrs:    []string{host},
 		Database: dbName,
@@ -53,7 +53,7 @@ func NewDatabaseWithHost(host string) *DB {
 		panic(fmt.Errorf("could not establish connection: %v", err))
 	}
 	sess.SetMode(mgo.Strong, true)
-	database := sess.DB(name)
+	database := sess.DB(dbName)
 
 	return &DB{mgoDB, database}
 }
