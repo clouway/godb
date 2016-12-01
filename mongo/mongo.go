@@ -54,6 +54,11 @@ func (db *database) Collection(name string) godb.Collection {
 	return &collection{db.mgoSess, coll}
 }
 
+func (db *database) Indexer(cname string) godb.Indexer {
+	coll := db.mgoDB.C(cname)
+	return &indexer{db.mgoSess, coll}
+}
+
 type collection struct {
 	sess *mgo.Session
 	coll *mgo.Collection
@@ -129,6 +134,37 @@ func (c *collection) refresh() (*mgo.Session, *mgo.Collection) {
 	coll := c.coll.With(sess)
 
 	return sess, coll
+}
+
+type indexer struct {
+	sess *mgo.Session
+	coll *mgo.Collection
+}
+
+// CreateAll creates all indexes that are provided as param or returns
+// error if any of them couldn't be created due issue with the database.
+func (i *indexer) CreateAll(indexes []godb.Index) error {
+	sess := i.sess.Copy()
+	defer sess.Close()
+
+	coll := i.coll.With(sess)
+
+	for _, i := range indexes {
+		err := coll.EnsureIndex(mgo.Index{
+			Key:        i.Key,
+			Unique:     i.Unique,
+			DropDups:   false,
+			Background: true,
+			Sparse:     false,
+		})
+
+		if err != nil {
+			return fmt.Errorf("coult not create index for %v due: %v", i.Key, err)
+		}
+	}
+
+	return nil
+
 }
 
 type query struct {
