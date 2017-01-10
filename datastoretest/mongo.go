@@ -61,14 +61,16 @@ func NewDatabaseWithHost(host string) *DB {
 // Close closes DB connection
 func (db *DB) Close() {
 	db.Clean()
+	db.database.DropDatabase()
 	db.database.Session.Close()
 }
 
 // Clean erases all database collections except system.
 func (db *DB) Clean() {
-	err := db.database.DropDatabase()
-	if err != nil {
-		panic(fmt.Errorf("could nod drop database '%s': %v", db.database.Name, err))
+	cnames, _ := db.database.CollectionNames()
+
+	for _, cname := range cnames {
+		db.database.C(cname).RemoveAll(nil)
 	}
 }
 
