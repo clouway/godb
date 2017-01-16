@@ -243,6 +243,10 @@ func (b *bulk) Run() (*godb.BulkResult, error) {
 	return adaptBulkResult(r), err
 }
 
+func (b *bulk) Insert(docs ...interface{}) {
+	b.bulk.Insert(docs...)
+}
+
 func (b *bulk) Update(pairs ...interface{}) {
 	b.bulk.Update(pairs...)
 }
@@ -262,3 +266,4 @@ func adaptBulkResult(r *mgo.BulkResult) *godb.BulkResult {
 
 	return &godb.BulkResult{Matched: r.Matched, Modified: r.Modified}
 }
+

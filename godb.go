@@ -65,6 +65,8 @@ type Iter interface {
 type Bulk interface {
 	Run() (*BulkResult, error)
 
+	Insert(docs ...interface{})
+
 	Update(pairs ...interface{})
 }
 
@@ -108,3 +110,4 @@ type Index struct {
 	// be unique or not
 	Unique bool
 }
+
