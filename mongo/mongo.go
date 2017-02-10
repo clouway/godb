@@ -9,6 +9,10 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
+var (
+	ErrNotFound = mgo.ErrNotFound
+)
+
 type database struct {
 	mgoSess *mgo.Session
 	mgoDB   *mgo.Database
@@ -266,4 +270,3 @@ func adaptBulkResult(r *mgo.BulkResult) *godb.BulkResult {
 
 	return &godb.BulkResult{Matched: r.Matched, Modified: r.Modified}
 }
-
