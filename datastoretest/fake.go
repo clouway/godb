@@ -6,16 +6,22 @@ import (
 )
 
 type FakeDatabase struct {
+	FakeBulk       *FakeBulk
 	FakeQuery      *FakeQuery
 	FakeCollection *FakeCollection
 }
 
 func NewFakeDatabase() *FakeDatabase {
+	bulk := new(FakeBulk)
 	query := new(FakeQuery)
 
 	return &FakeDatabase{
-		FakeQuery:      query,
-		FakeCollection: &FakeCollection{FakeQuery: query},
+		FakeBulk:  bulk,
+		FakeQuery: query,
+		FakeCollection: &FakeCollection{
+			FakeBulk:  bulk,
+			FakeQuery: query,
+		},
 	}
 }
 
@@ -30,6 +36,7 @@ func (d *FakeDatabase) Indexer(cname string) godb.Indexer {
 }
 
 type FakeCollection struct {
+	FakeBulk  *FakeBulk
 	FakeQuery *FakeQuery
 	mock.Mock
 }
@@ -70,7 +77,7 @@ func (c *FakeCollection) RemoveAll(selector interface{}) (*godb.ChangeInfo, erro
 }
 
 func (c *FakeCollection) Bulk() godb.Bulk {
-	return c.Called().Get(0).(godb.Bulk)
+	return c.FakeBulk
 }
 
 type FakeQuery struct {
@@ -110,3 +117,16 @@ func (q *FakeQuery) Sort(fields ...string) godb.Query {
 func (q *FakeQuery) Select(selector interface{}) godb.Query {
 	return q
 }
+
+type FakeBulk struct {
+	mock.Mock
+}
+
+func (b *FakeBulk) Run() (*godb.BulkResult, error) {
+	args := b.Called()
+	return args.Get(0).(*godb.BulkResult), args.Error(1)
+}
+
+func (b *FakeBulk) Insert(docs ...interface{}) {}
+
+func (b *FakeBulk) Update(pairs ...interface{}) {}
