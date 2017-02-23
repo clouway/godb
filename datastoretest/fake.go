@@ -130,3 +130,5 @@ func (b *FakeBulk) Run() (*godb.BulkResult, error) {
 func (b *FakeBulk) Insert(docs ...interface{}) {}
 
 func (b *FakeBulk) Update(pairs ...interface{}) {}
+
+func (b *FakeBulk) Upsert(pairs ...interface{}) {}

@@ -68,6 +68,8 @@ type Bulk interface {
 	Insert(docs ...interface{})
 
 	Update(pairs ...interface{})
+
+	Upsert(pairs ...interface{})
 }
 
 // Config is a configuration object used for the communication with
@@ -110,4 +112,3 @@ type Index struct {
 	// be unique or not
 	Unique bool
 }
-
