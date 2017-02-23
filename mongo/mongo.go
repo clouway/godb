@@ -255,6 +255,10 @@ func (b *bulk) Update(pairs ...interface{}) {
 	b.bulk.Update(pairs...)
 }
 
+func (b *bulk) Upsert(pairs ...interface{}) {
+	b.bulk.Upsert(pairs...)
+}
+
 func adaptChangeInfo(info *mgo.ChangeInfo) *godb.ChangeInfo {
 	if info == nil {
 		return nil
