@@ -55,7 +55,6 @@ func NewDatabaseWithHost(host string) *DB {
 
 	sess.SetMode(mgo.Strong, true)
 	sess.SetSocketTimeout(10 * time.Second)
-	sess.SetCursorTimeout(10 * time.Second)
 
 	database := sess.DB(dbName)
 
