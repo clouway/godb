@@ -10,6 +10,9 @@ type Database interface {
 
 	// Gets Indexer for the provided collection name
 	Indexer(cname string) Indexer
+
+	// Ping runs a trivial ping command just to get in touch with the server.
+	Ping() error
 }
 
 // Collection is a collection in the database. Single database is having

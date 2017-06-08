@@ -63,6 +63,10 @@ func (db *database) Indexer(cname string) godb.Indexer {
 	return &indexer{db.mgoSess, coll}
 }
 
+func (db *database) Ping() error {
+	return db.mgoSess.Ping()
+}
+
 type collection struct {
 	sess *mgo.Session
 	coll *mgo.Collection
