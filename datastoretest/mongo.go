@@ -52,7 +52,11 @@ func NewDatabaseWithHost(host string) *DB {
 	if err != nil {
 		panic(fmt.Errorf("could not establish connection: %v", err))
 	}
+
 	sess.SetMode(mgo.Strong, true)
+	sess.SetSocketTimeout(10 * time.Second)
+	sess.SetCursorTimeout(10 * time.Second)
+
 	database := sess.DB(dbName)
 
 	return &DB{mgoDB, database}
