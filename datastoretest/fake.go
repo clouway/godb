@@ -9,6 +9,7 @@ type FakeDatabase struct {
 	FakeBulk       *FakeBulk
 	FakeQuery      *FakeQuery
 	FakeCollection *FakeCollection
+	mock.Mock
 }
 
 func NewFakeDatabase() *FakeDatabase {
@@ -33,6 +34,10 @@ func (d *FakeDatabase) Collection(name string) godb.Collection {
 
 func (d *FakeDatabase) Indexer(cname string) godb.Indexer {
 	return nil
+}
+
+func (d *FakeDatabase) Ping() error {
+	return d.Called().Error(0)
 }
 
 type FakeCollection struct {
