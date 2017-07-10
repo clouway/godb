@@ -64,7 +64,10 @@ func (db *database) Indexer(cname string) godb.Indexer {
 }
 
 func (db *database) Ping() error {
-	return db.mgoSess.Ping()
+	sess := db.mgoSess.Copy()
+	defer sess.Close()
+
+	return sess.Ping()
 }
 
 type collection struct {
