@@ -2,7 +2,9 @@ package datastoretest
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -12,12 +14,15 @@ import (
 )
 
 const (
-	name = "testDb"
+	name       = "testDb"
+	mongoImage = "mongo"
 )
 
 type DB struct {
 	godb.Database
-	database *mgo.Database
+
+	database    *mgo.Database
+	containerID string
 }
 
 // NewDatabase is establishing a new database connection using host
@@ -26,11 +31,40 @@ type DB struct {
 // The created database will be dropped after Clean/Drop function is called.
 func NewDatabase() *DB {
 	host := os.Getenv("TEST_DB_HOST")
-	if host == "" {
-		host = "localhost:27017"
+
+	if host != "" {
+		return NewDatabaseWithHost(host)
 	}
 
-	return NewDatabaseWithHost(host)
+	if _, err := exec.LookPath("docker"); err != nil {
+		log.Panicln("skipping without docker available in path")
+	}
+
+	if ok, err := dockerHaveImage(mongoImage); !ok || err != nil {
+		if err != nil {
+			log.Panicf("Error running docker to check for %s: %v", mongoImage, err)
+		}
+		log.Printf("Pulling docker image %s ...", mongoImage)
+		if err := dockerPull(mongoImage); err != nil {
+			log.Panicf("Error pulling %s: %v", mongoImage, err)
+		}
+	}
+
+	containerID, err := dockerRun("-d", mongoImage, "--smallfiles")
+	if err != nil {
+		log.Panicf("docker run: %v", err)
+	}
+
+	ip, err := dockerIP(containerID)
+
+	if err != nil {
+		log.Panicf("Error getting container IP: %v", err)
+	}
+
+	db := NewDatabaseWithHost(ip)
+	db.containerID = containerID
+
+	return db
 }
 
 // NewDatabaseWithHost is establihing a new database connection
@@ -58,11 +92,15 @@ func NewDatabaseWithHost(host string) *DB {
 
 	database := sess.DB(dbName)
 
-	return &DB{mgoDB, database}
+	return &DB{mgoDB, database, ""}
 }
 
 // Close closes DB connection
 func (db *DB) Close() {
+	if db.containerID != "" {
+		defer dockerKillContainer(db.containerID)
+	}
+
 	db.Clean()
 	db.database.DropDatabase()
 	db.database.Session.Close()
