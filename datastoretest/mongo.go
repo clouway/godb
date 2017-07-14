@@ -97,13 +97,15 @@ func NewDatabaseWithHost(host string) *DB {
 
 // Close closes DB connection
 func (db *DB) Close() {
-	if db.containerID != "" {
-		defer dockerKillContainer(db.containerID)
-	}
-
 	db.Clean()
 	db.database.DropDatabase()
 	db.database.Session.Close()
+
+	if db.containerID != "" {
+		if err := dockerKillContainer(db.containerID); err != nil {
+			log.Panicf("Error killing container %v: %v", db.containerID, err)
+		}
+	}
 }
 
 // Clean erases all database collections except system.
