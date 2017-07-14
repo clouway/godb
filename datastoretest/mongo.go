@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strconv"
 	"time"
 
 	"github.com/clouway/godb"
 	"github.com/clouway/godb/mongo"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/ory-am/dockertest.v3"
 )
 
 const (
-	name       = "testDb"
-	mongoImage = "mongo"
+	name = "testDb"
 )
 
 type DB struct {
 	godb.Database
 
-	database    *mgo.Database
-	containerID string
+	pool     *dockertest.Pool
+	resource *dockertest.Resource
+	database *mgo.Database
 }
 
 // NewDatabase is establishing a new database connection using host
@@ -36,33 +36,32 @@ func NewDatabase() *DB {
 		return NewDatabaseWithHost(host)
 	}
 
-	if _, err := exec.LookPath("docker"); err != nil {
-		log.Panicln("skipping without docker available in path")
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	if ok, err := dockerHaveImage(mongoImage); !ok || err != nil {
+	resource, err := pool.Run("mongo", "", nil)
+	if err != nil {
+		log.Fatalf("Could not start resource: %s", err)
+	}
+
+	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	if err := pool.Retry(func() error {
+		var err error
+		db, err := mgo.Dial(fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")))
 		if err != nil {
-			log.Panicf("Error running docker to check for %s: %v", mongoImage, err)
+			return err
 		}
-		log.Printf("Pulling docker image %s ...", mongoImage)
-		if err := dockerPull(mongoImage); err != nil {
-			log.Panicf("Error pulling %s: %v", mongoImage, err)
-		}
+
+		return db.Ping()
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	containerID, err := dockerRun("-d", mongoImage, "--smallfiles")
-	if err != nil {
-		log.Panicf("docker run: %v", err)
-	}
-
-	ip, err := dockerIP(containerID)
-
-	if err != nil {
-		log.Panicf("Error getting container IP: %v", err)
-	}
-
-	db := NewDatabaseWithHost(ip)
-	db.containerID = containerID
+	db := NewDatabaseWithHost(fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")))
+	db.pool = pool
+	db.resource = resource
 
 	return db
 }
@@ -92,7 +91,7 @@ func NewDatabaseWithHost(host string) *DB {
 
 	database := sess.DB(dbName)
 
-	return &DB{mgoDB, database, ""}
+	return &DB{Database: mgoDB, database: database}
 }
 
 // Close closes DB connection
@@ -101,10 +100,8 @@ func (db *DB) Close() {
 	db.database.DropDatabase()
 	db.database.Session.Close()
 
-	if db.containerID != "" {
-		if err := dockerKillContainer(db.containerID); err != nil {
-			log.Panicf("Error killing container %v: %v", db.containerID, err)
-		}
+	if db.resource != nil {
+		db.pool.Purge(db.resource)
 	}
 }
 
