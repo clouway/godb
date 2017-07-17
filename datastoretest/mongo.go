@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/clouway/godb"
@@ -15,6 +16,11 @@ import (
 
 const (
 	name = "testDb"
+)
+
+var (
+	db        *DB
+	instances int32
 )
 
 type DB struct {
@@ -31,6 +37,12 @@ type DB struct {
 // The created database will be dropped after Clean/Drop function is called.
 func NewDatabase() *DB {
 	host := os.Getenv("TEST_DB_HOST")
+	instCopy := atomic.LoadInt32(&instances)
+
+	if instCopy != 0 {
+		atomic.AddInt32(&instances, 1)
+		return db
+	}
 
 	if host != "" {
 		return NewDatabaseWithHost(host)
@@ -69,8 +81,15 @@ func NewDatabase() *DB {
 // NewDatabaseWithHost is establihing a new database connection
 // to the provided host
 func NewDatabaseWithHost(host string) *DB {
-	t := time.Now().Nanosecond()
-	dbName := name + strconv.Itoa(t)
+	instCopy := atomic.LoadInt32(&instances)
+
+	if instCopy != 0 {
+		atomic.AddInt32(&instances, 1)
+		return db
+	}
+
+	dbName := name + strconv.Itoa(time.Now().Nanosecond())
+
 	config := &godb.Config{
 		Addrs:    []string{host},
 		Database: dbName,
@@ -86,16 +105,31 @@ func NewDatabaseWithHost(host string) *DB {
 		panic(fmt.Errorf("could not establish connection: %v", err))
 	}
 
+	atomic.AddInt32(&instances, 1)
+
 	sess.SetMode(mgo.Strong, true)
 	sess.SetSocketTimeout(10 * time.Second)
 
 	database := sess.DB(dbName)
 
-	return &DB{Database: mgoDB, database: database}
+	db = &DB{
+		Database: mgoDB,
+		database: database,
+	}
+
+	return db
 }
 
 // Close closes DB connection
 func (db *DB) Close() {
+	atomic.AddInt32(&instances, -1)
+
+	instCopy := atomic.LoadInt32(&instances)
+
+	if instCopy != 0 {
+		return
+	}
+
 	db.Clean()
 	db.database.DropDatabase()
 	db.database.Session.Close()
