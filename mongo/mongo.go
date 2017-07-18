@@ -58,6 +58,24 @@ func (db *database) Collection(name string) godb.Collection {
 	return &collection{db.mgoSess, coll}
 }
 
+func (db *database) Collections() ([]godb.Collection, error) {
+	cnames, err := db.mgoDB.CollectionNames()
+	collections := []godb.Collection{}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cname := range cnames {
+		collections = append(collections, &collection{
+			db.mgoSess,
+			db.mgoDB.C(cname),
+		})
+	}
+
+	return collections, nil
+}
+
 func (db *database) Indexer(cname string) godb.Indexer {
 	coll := db.mgoDB.C(cname)
 	return &indexer{db.mgoSess, coll}
@@ -68,6 +86,10 @@ func (db *database) Ping() error {
 	defer sess.Close()
 
 	return sess.Ping()
+}
+
+func (db *database) DropDatabase() error {
+	return db.mgoDB.DropDatabase()
 }
 
 type collection struct {
@@ -138,6 +160,14 @@ func (c *collection) Bulk() godb.Bulk {
 	mgoBulk := coll.Bulk()
 
 	return &bulk{sess, mgoBulk}
+}
+
+func (c *collection) Clean() error {
+	sess, coll := c.refresh()
+	defer sess.Close()
+
+	_, err := coll.RemoveAll(nil)
+	return err
 }
 
 func (c *collection) refresh() (*mgo.Session, *mgo.Collection) {

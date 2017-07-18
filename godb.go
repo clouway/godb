@@ -2,17 +2,23 @@ package godb
 
 // Database is reprsenting the database
 type Database interface {
+	// Ping runs a trivial ping command just to get in touch with the server.
+	Ping() error
+
 	// Close closes the connection to the database
 	Close()
-
-	// Collection is getting collection by it's name
-	Collection(name string) Collection
 
 	// Gets Indexer for the provided collection name
 	Indexer(cname string) Indexer
 
-	// Ping runs a trivial ping command just to get in touch with the server.
-	Ping() error
+	// Collection is getting collection by it's name
+	Collection(name string) Collection
+
+	// Collections returns the existing collections
+	Collections() ([]Collection, error)
+
+	// DropDatabase drops the current database
+	DropDatabase() error
 }
 
 // Collection is a collection in the database. Single database is having
@@ -35,6 +41,8 @@ type Collection interface {
 	RemoveAll(selector interface{}) (*ChangeInfo, error)
 
 	Bulk() Bulk
+
+	Clean() error
 }
 
 // Indexer is responsible for creation of indexes

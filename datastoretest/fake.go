@@ -32,11 +32,19 @@ func (d *FakeDatabase) Collection(name string) godb.Collection {
 	return d.FakeCollection
 }
 
+func (d *FakeDatabase) Collections() ([]godb.Collection, error) {
+	return nil, nil
+}
+
 func (d *FakeDatabase) Indexer(cname string) godb.Indexer {
 	return nil
 }
 
 func (d *FakeDatabase) Ping() error {
+	return d.Called().Error(0)
+}
+
+func (d *FakeDatabase) DropDatabase() error {
 	return d.Called().Error(0)
 }
 
@@ -83,6 +91,11 @@ func (c *FakeCollection) RemoveAll(selector interface{}) (*godb.ChangeInfo, erro
 
 func (c *FakeCollection) Bulk() godb.Bulk {
 	return c.FakeBulk
+}
+
+func (c *FakeCollection) Clean() error {
+	args := c.Called()
+	return args.Error(0)
 }
 
 type FakeQuery struct {

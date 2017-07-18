@@ -28,7 +28,6 @@ type DB struct {
 
 	pool     *dockertest.Pool
 	resource *dockertest.Resource
-	database *mgo.Database
 }
 
 // NewDatabase is establishing a new database connection using host
@@ -100,21 +99,10 @@ func NewDatabaseWithHost(host string) *DB {
 		panic(fmt.Errorf("could not establish connection: %v", err))
 	}
 
-	sess, err := connect(host)
-	if err != nil {
-		panic(fmt.Errorf("could not establish connection: %v", err))
-	}
-
 	atomic.AddInt32(&instances, 1)
-
-	sess.SetMode(mgo.Strong, true)
-	sess.SetSocketTimeout(10 * time.Second)
-
-	database := sess.DB(dbName)
 
 	db = &DB{
 		Database: mgoDB,
-		database: database,
 	}
 
 	return db
@@ -131,8 +119,8 @@ func (db *DB) Close() {
 	}
 
 	db.Clean()
-	db.database.DropDatabase()
-	db.database.Session.Close()
+	db.DropDatabase()
+	db.Close()
 
 	if db.resource != nil {
 		db.pool.Purge(db.resource)
@@ -141,19 +129,9 @@ func (db *DB) Close() {
 
 // Clean erases all database collections except system.
 func (db *DB) Clean() {
-	cnames, _ := db.database.CollectionNames()
+	collections, _ := db.Collections()
 
-	for _, cname := range cnames {
-		db.database.C(cname).RemoveAll(nil)
+	for _, c := range collections {
+		c.Clean()
 	}
-}
-
-func connect(host string) (*mgo.Session, error) {
-	sess, err := mgo.Dial(host)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return sess, nil
 }
