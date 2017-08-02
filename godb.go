@@ -32,6 +32,8 @@ type Collection interface {
 
 	Update(selector interface{}, update interface{}) error
 
+	UpdateAll(selector interface{}, update interface{}) (*ChangeInfo, error)
+
 	Upsert(selector interface{}, update interface{}) (*ChangeInfo, error)
 
 	Remove(selector interface{}) error
