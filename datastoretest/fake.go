@@ -71,6 +71,11 @@ func (c *FakeCollection) Update(selector interface{}, update interface{}) error 
 	return c.Called().Error(0)
 }
 
+func (c *FakeCollection) UpdateAll(selector interface{}, update interface{}) (*godb.ChangeInfo, error) {
+	args := c.Called()
+	return args.Get(0).(*godb.ChangeInfo), args.Error(1)
+}
+
 func (c *FakeCollection) Upsert(selector interface{}, update interface{}) (*godb.ChangeInfo, error) {
 	args := c.Called()
 	return args.Get(0).(*godb.ChangeInfo), args.Error(1)

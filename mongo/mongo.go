@@ -125,6 +125,14 @@ func (c *collection) Update(selector interface{}, update interface{}) error {
 	return coll.Update(selector, update)
 }
 
+func (c *collection) UpdateAll(selector interface{}, update interface{}) (*godb.ChangeInfo, error) {
+	sess, coll := c.refresh()
+	defer sess.Close()
+
+	info, err := coll.UpdateAll(selector, update)
+	return adaptChangeInfo(info), err
+}
+
 func (c *collection) Upsert(selector interface{}, update interface{}) (*godb.ChangeInfo, error) {
 	sess, coll := c.refresh()
 	defer sess.Close()
