@@ -254,6 +254,11 @@ func (q *query) Limit(n int) godb.Query {
 	return q
 }
 
+func (q *query) Skip(n int) godb.Query {
+	q.query = q.query.Skip(n)
+	return q
+}
+
 func (q *query) Sort(fields ...string) godb.Query {
 	q.query = q.query.Sort(fields...)
 	return q

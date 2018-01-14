@@ -66,6 +66,8 @@ type Query interface {
 
 	Limit(n int) Query
 
+	Skip(n int) Query
+
 	Sort(fields ...string) Query
 
 	Select(selector interface{}) Query

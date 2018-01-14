@@ -133,6 +133,10 @@ func (q *FakeQuery) Limit(n int) godb.Query {
 	return q
 }
 
+func (q *FakeQuery) Skip(n int) godb.Query {
+	return q
+}
+
 func (q *FakeQuery) Sort(fields ...string) godb.Query {
 	return q
 }
