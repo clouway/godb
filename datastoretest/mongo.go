@@ -10,7 +10,7 @@ import (
 
 	"github.com/clouway/godb"
 	"github.com/clouway/godb/mongo"
-	"gopkg.in/mgo.v2"
+	"github.com/globalsign/mgo"
 	"gopkg.in/ory-am/dockertest.v3"
 )
 
