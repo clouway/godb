@@ -23,7 +23,13 @@ type database struct {
 // The MaxRetryAttempts option is used as limit of retry attemps. If limit is reached then
 // last returned error is returned and as result to indicate that communication with the database is failed
 func NewDatabase(config *godb.Config) (godb.Database, error) {
-	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: 2 * time.Second}
+	timeout := 2 * time.Second
+
+	if config.Timeout > 0 {
+		timeout = config.Timeout
+	}
+
+	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: timeout}
 	var sess *mgo.Session
 	var err error
 	sess, err = mgo.DialWithInfo(info)

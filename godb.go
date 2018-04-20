@@ -1,5 +1,7 @@
 package godb
 
+import "time"
+
 // Database is reprsenting the database
 type Database interface {
 	// Ping runs a trivial ping command just to get in touch with the server.
@@ -93,6 +95,8 @@ type Config struct {
 	Addrs []string // slice of hosts
 
 	Database string // name of the database
+
+	Timeout time.Duration // dial timeout
 
 	MaxRetryAttempts int // number of max retry attempts
 }

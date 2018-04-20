@@ -90,8 +90,10 @@ func NewDatabaseWithHost(host string) *DB {
 	dbName := name + strconv.Itoa(time.Now().Nanosecond())
 
 	config := &godb.Config{
-		Addrs:    []string{host},
-		Database: dbName,
+		Addrs:            []string{host},
+		Database:         dbName,
+		Timeout:          60 * time.Second,
+		MaxRetryAttempts: 5,
 	}
 
 	mgoDB, err := mongo.NewDatabase(config)
