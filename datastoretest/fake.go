@@ -129,6 +129,11 @@ func (q *FakeQuery) Count() (int, error) {
 	return args.Get(0).(int), args.Error(1)
 }
 
+func (q *FakeQuery) Distinct(key string, result interface{}) error {
+	args := q.Called(key, result)
+	return args.Error(0)
+}
+
 func (q *FakeQuery) Limit(n int) godb.Query {
 	return q
 }

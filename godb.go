@@ -66,6 +66,8 @@ type Query interface {
 
 	Count() (int, error)
 
+	Distinct(key string, result interface{}) error
+
 	Limit(n int) Query
 
 	Skip(n int) Query

@@ -255,6 +255,11 @@ func (q *query) Count() (int, error) {
 	return q.query.Count()
 }
 
+func (q *query) Distinct(key string, result interface{}) error {
+	defer q.sess.Close()
+	return q.query.Distinct(key, result)
+}
+
 func (q *query) Limit(n int) godb.Query {
 	q.query = q.query.Limit(n)
 	return q
