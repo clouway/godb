@@ -132,4 +132,8 @@ type Index struct {
 	// Unique is flag which indicates whether index should
 	// be unique or not
 	Unique bool
+
+	// If ExpireAfter is defined the server will periodically delete
+	// documents with indexed time.Time older than the provided delta.
+	ExpireAfter time.Duration
 }
