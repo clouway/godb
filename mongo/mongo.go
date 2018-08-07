@@ -206,11 +206,12 @@ func (i *indexer) CreateAll(indexes []godb.Index) error {
 
 	for _, i := range indexes {
 		err := coll.EnsureIndex(mgo.Index{
-			Key:        i.Key,
-			Unique:     i.Unique,
-			DropDups:   false,
-			Background: true,
-			Sparse:     false,
+			Key:         i.Key,
+			Unique:      i.Unique,
+			ExpireAfter: i.ExpireAfter,
+			DropDups:    false,
+			Background:  true,
+			Sparse:      false,
 		})
 
 		if err != nil {
