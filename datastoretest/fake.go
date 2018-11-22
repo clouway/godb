@@ -13,8 +13,11 @@ type FakeDatabase struct {
 }
 
 func NewFakeDatabase() *FakeDatabase {
-	bulk := new(FakeBulk)
-	query := new(FakeQuery)
+	bulk := &FakeBulk{}
+
+	query := &FakeQuery{
+		FakeIter: &FakeIter{},
+	}
 
 	return &FakeDatabase{
 		FakeBulk:  bulk,
@@ -59,7 +62,6 @@ func (c *FakeCollection) Find(query interface{}) godb.Query {
 }
 
 func (c *FakeCollection) FindID(id interface{}) godb.Query {
-
 	return c.FakeQuery
 }
 
@@ -104,6 +106,7 @@ func (c *FakeCollection) Clean() error {
 }
 
 type FakeQuery struct {
+	FakeIter *FakeIter
 	mock.Mock
 }
 
@@ -121,7 +124,7 @@ func (q *FakeQuery) One(result interface{}) error {
 }
 
 func (q *FakeQuery) Iter() godb.Iter {
-	return q.Called().Get(0).(godb.Iter)
+	return q.FakeIter
 }
 
 func (q *FakeQuery) Count() (int, error) {
@@ -164,3 +167,28 @@ func (b *FakeBulk) Insert(docs ...interface{}) {}
 func (b *FakeBulk) Update(pairs ...interface{}) {}
 
 func (b *FakeBulk) Upsert(pairs ...interface{}) {}
+
+type FakeIter struct {
+	mock.Mock
+}
+
+func (i *FakeIter) Next(result interface{}) bool {
+	args := i.Called(result)
+	return args.Bool(0)
+}
+
+func (i *FakeIter) Done() bool {
+	args := i.Called()
+	return args.Bool(0)
+
+}
+
+func (i *FakeIter) Close() error {
+	args := i.Called()
+	return args.Error(0)
+}
+
+func (i *FakeIter) Timeout() bool {
+	args := i.Called()
+	return args.Bool(0)
+}

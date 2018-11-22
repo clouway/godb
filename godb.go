@@ -79,6 +79,12 @@ type Query interface {
 
 type Iter interface {
 	Next(result interface{}) bool
+
+	Done() bool
+
+	Close() error
+
+	Timeout() bool
 }
 
 type Bulk interface {

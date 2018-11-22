@@ -296,6 +296,18 @@ func (i *iter) Next(result interface{}) bool {
 	return hasNext
 }
 
+func (i *iter) Done() bool {
+	return i.iter.Done()
+}
+
+func (i *iter) Close() error {
+	return i.iter.Close()
+}
+
+func (i *iter) Timeout() bool {
+	return i.iter.Timeout()
+}
+
 type bulk struct {
 	sess *mgo.Session
 	bulk *mgo.Bulk
