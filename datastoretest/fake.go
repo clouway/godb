@@ -172,6 +172,11 @@ type FakeIter struct {
 	mock.Mock
 }
 
+func (i *FakeIter) Err() error {
+	args := i.Called()
+	return args.Error(0)
+}
+
 func (i *FakeIter) Next(result interface{}) bool {
 	args := i.Called(result)
 	return args.Bool(0)
@@ -180,7 +185,6 @@ func (i *FakeIter) Next(result interface{}) bool {
 func (i *FakeIter) Done() bool {
 	args := i.Called()
 	return args.Bool(0)
-
 }
 
 func (i *FakeIter) Close() error {

@@ -78,6 +78,8 @@ type Query interface {
 }
 
 type Iter interface {
+	Err() error
+
 	Next(result interface{}) bool
 
 	Done() bool

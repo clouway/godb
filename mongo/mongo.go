@@ -286,6 +286,10 @@ type iter struct {
 	iter *mgo.Iter
 }
 
+func (i *iter) Err() error {
+	return i.iter.Err()
+}
+
 func (i *iter) Next(result interface{}) bool {
 	hasNext := i.iter.Next(result)
 
