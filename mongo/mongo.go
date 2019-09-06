@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/clouway/godb"
 	"github.com/globalsign/mgo"
+
+	"github.com/clouway/godb"
 )
 
 var (
@@ -248,7 +249,10 @@ func (q *query) One(result interface{}) error {
 }
 
 func (q *query) Iter() godb.Iter {
-	return &iter{q.sess, q.query.Iter()}
+	return &iter{
+		sess: q.sess,
+		iter: q.query.Iter(),
+	}
 }
 
 func (q *query) Count() (int, error) {
@@ -282,8 +286,9 @@ func (q *query) Select(selector interface{}) godb.Query {
 }
 
 type iter struct {
-	sess *mgo.Session
-	iter *mgo.Iter
+	sess   *mgo.Session
+	iter   *mgo.Iter
+	closed bool
 }
 
 func (i *iter) Err() error {
@@ -295,16 +300,25 @@ func (i *iter) Next(result interface{}) bool {
 
 	if !hasNext {
 		i.sess.Close()
+		i.closed = true
 	}
 
 	return hasNext
 }
 
 func (i *iter) Done() bool {
+	if i.closed {
+		return true
+	}
+
 	return i.iter.Done()
 }
 
 func (i *iter) Close() error {
+	if i.closed {
+		return nil
+	}
+
 	return i.iter.Close()
 }
 
