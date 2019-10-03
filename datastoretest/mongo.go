@@ -11,7 +11,7 @@ import (
 	"github.com/clouway/godb"
 	"github.com/clouway/godb/mongo"
 	"github.com/globalsign/mgo"
-	"gopkg.in/ory-am/dockertest.v3"
+	"github.com/ory/dockertest"
 )
 
 const (
