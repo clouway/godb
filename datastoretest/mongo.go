@@ -8,10 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/clouway/godb"
-	"github.com/clouway/godb/mongo"
 	"github.com/globalsign/mgo"
 	"github.com/ory/dockertest"
+
+	"github.com/clouway/godb"
+	"github.com/clouway/godb/mongo"
 )
 
 const (

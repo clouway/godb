@@ -356,7 +356,7 @@ func adaptChangeInfo(info *mgo.ChangeInfo) *godb.ChangeInfo {
 		return nil
 	}
 
-	return &godb.ChangeInfo{Updated: info.Updated, Removed: info.Removed, UpsertedID: info.UpsertedId}
+	return &godb.ChangeInfo{Updated: info.Updated, Removed: info.Removed, Matched:info.Matched, UpsertedID: info.UpsertedId}
 }
 
 func adaptBulkResult(r *mgo.BulkResult) *godb.BulkResult {

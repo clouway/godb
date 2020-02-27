@@ -121,6 +121,7 @@ type Change struct {
 type ChangeInfo struct {
 	Updated    int
 	Removed    int
+	Matched    int
 	UpsertedID interface{}
 }
 
