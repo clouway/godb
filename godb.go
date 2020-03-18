@@ -2,7 +2,7 @@ package godb
 
 import "time"
 
-// Database is reprsenting the database
+// Database is representing the database
 type Database interface {
 	// Ping runs a trivial ping command just to get in touch with the server.
 	Ping() error
@@ -45,6 +45,8 @@ type Collection interface {
 	RemoveAll(selector interface{}) (*ChangeInfo, error)
 
 	Bulk() Bulk
+
+	Pipe(pipeline interface{}) Pipe
 
 	Clean() error
 }
@@ -97,6 +99,12 @@ type Bulk interface {
 	Update(pairs ...interface{})
 
 	Upsert(pairs ...interface{})
+}
+
+type Pipe interface {
+	All(result interface{}) error
+
+	One(result interface{}) error
 }
 
 // Config is a configuration object used for the communication with

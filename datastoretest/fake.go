@@ -1,12 +1,14 @@
 package datastoretest
 
 import (
-	"github.com/clouway/godb"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/clouway/godb"
 )
 
 type FakeDatabase struct {
 	FakeBulk       *FakeBulk
+	FakePipe       *FakePipe
 	FakeQuery      *FakeQuery
 	FakeCollection *FakeCollection
 	mock.Mock
@@ -14,6 +16,7 @@ type FakeDatabase struct {
 
 func NewFakeDatabase() *FakeDatabase {
 	bulk := &FakeBulk{}
+	pipe := &FakePipe{}
 
 	query := &FakeQuery{
 		FakeIter: &FakeIter{},
@@ -21,9 +24,11 @@ func NewFakeDatabase() *FakeDatabase {
 
 	return &FakeDatabase{
 		FakeBulk:  bulk,
+		FakePipe:  pipe,
 		FakeQuery: query,
 		FakeCollection: &FakeCollection{
 			FakeBulk:  bulk,
+			FakePipe:  pipe,
 			FakeQuery: query,
 		},
 	}
@@ -53,6 +58,7 @@ func (d *FakeDatabase) DropDatabase() error {
 
 type FakeCollection struct {
 	FakeBulk  *FakeBulk
+	FakePipe  *FakePipe
 	FakeQuery *FakeQuery
 	mock.Mock
 }
@@ -98,6 +104,10 @@ func (c *FakeCollection) RemoveAll(selector interface{}) (*godb.ChangeInfo, erro
 
 func (c *FakeCollection) Bulk() godb.Bulk {
 	return c.FakeBulk
+}
+
+func (c *FakeCollection) Pipe(pipeline interface{}) godb.Pipe {
+	return c.FakePipe
 }
 
 func (c *FakeCollection) Clean() error {
@@ -167,6 +177,18 @@ func (b *FakeBulk) Insert(docs ...interface{}) {}
 func (b *FakeBulk) Update(pairs ...interface{}) {}
 
 func (b *FakeBulk) Upsert(pairs ...interface{}) {}
+
+type FakePipe struct {
+	mock.Mock
+}
+
+func (b *FakePipe) All(result interface{}) error {
+	return b.Called().Error(0)
+}
+
+func (b *FakePipe) One(result interface{}) error {
+	return b.Called().Error(0)
+}
 
 type FakeIter struct {
 	mock.Mock

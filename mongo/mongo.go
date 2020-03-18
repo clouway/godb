@@ -177,6 +177,13 @@ func (c *collection) Bulk() godb.Bulk {
 	return &bulk{sess, mgoBulk}
 }
 
+func (c *collection) Pipe(pipeline interface{}) godb.Pipe {
+	sess, coll := c.refresh()
+	mgoPipe := coll.Pipe(pipeline)
+
+	return &pipe{sess, mgoPipe}
+}
+
 func (c *collection) Clean() error {
 	sess, coll := c.refresh()
 	defer sess.Close()
@@ -349,6 +356,21 @@ func (b *bulk) Update(pairs ...interface{}) {
 
 func (b *bulk) Upsert(pairs ...interface{}) {
 	b.bulk.Upsert(pairs...)
+}
+
+type pipe struct {
+	sess *mgo.Session
+	pipe *mgo.Pipe
+}
+
+func (p *pipe) All(result interface{}) error {
+	defer p.sess.Close()
+	return p.pipe.All(result)
+}
+
+func (p *pipe) One(result interface{}) error {
+	defer p.sess.Close()
+	return p.pipe.One(result)
 }
 
 func adaptChangeInfo(info *mgo.ChangeInfo) *godb.ChangeInfo {
