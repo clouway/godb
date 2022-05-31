@@ -117,6 +117,8 @@ type Config struct {
 	Timeout time.Duration // dial timeout
 
 	MaxRetryAttempts int // number of max retry attempts
+
+	MaxIdleTimeMS int // The maximum number of milliseconds that a connection can remain idle in the pool before being removed and closed.
 }
 
 type Change struct {

@@ -30,7 +30,7 @@ func NewDatabase(config *godb.Config) (godb.Database, error) {
 		timeout = config.Timeout
 	}
 
-	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: timeout}
+	info := &mgo.DialInfo{Addrs: config.Addrs, Timeout: timeout, MaxIdleTimeMS: config.MaxIdleTimeMS}
 	var sess *mgo.Session
 	var err error
 	sess, err = mgo.DialWithInfo(info)
