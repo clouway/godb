@@ -105,6 +105,8 @@ type Pipe interface {
 	All(result interface{}) error
 
 	One(result interface{}) error
+
+	Iter() Iter
 }
 
 // Config is a configuration object used for the communication with

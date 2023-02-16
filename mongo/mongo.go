@@ -5,9 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/globalsign/mgo"
-
 	"github.com/clouway/godb"
+	"github.com/globalsign/mgo"
 )
 
 var (
@@ -180,8 +179,9 @@ func (c *collection) Bulk() godb.Bulk {
 func (c *collection) Pipe(pipeline interface{}) godb.Pipe {
 	sess, coll := c.refresh()
 	mgoPipe := coll.Pipe(pipeline)
+	mgoIter := mgoPipe.Iter()
 
-	return &pipe{sess, mgoPipe}
+	return &pipe{sess, mgoPipe, mgoIter}
 }
 
 func (c *collection) Clean() error {
@@ -361,6 +361,7 @@ func (b *bulk) Upsert(pairs ...interface{}) {
 type pipe struct {
 	sess *mgo.Session
 	pipe *mgo.Pipe
+	iter *mgo.Iter
 }
 
 func (p *pipe) All(result interface{}) error {
@@ -371,6 +372,13 @@ func (p *pipe) All(result interface{}) error {
 func (p *pipe) One(result interface{}) error {
 	defer p.sess.Close()
 	return p.pipe.One(result)
+}
+
+func (p *pipe) Iter() godb.Iter {
+	return &iter{
+		sess: p.sess,
+		iter: p.iter,
+	}
 }
 
 func adaptChangeInfo(info *mgo.ChangeInfo) *godb.ChangeInfo {
