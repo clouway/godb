@@ -182,6 +182,10 @@ type FakePipe struct {
 	mock.Mock
 }
 
+func (b *FakePipe) Iter() godb.Iter {
+	return b.Called().Get(0).(godb.Iter)
+}
+
 func (b *FakePipe) All(result interface{}) error {
 	return b.Called().Error(0)
 }
