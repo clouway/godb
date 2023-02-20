@@ -16,7 +16,9 @@ type FakeDatabase struct {
 
 func NewFakeDatabase() *FakeDatabase {
 	bulk := &FakeBulk{}
-	pipe := &FakePipe{}
+	pipe := &FakePipe{
+		FakeIter: &FakeIter{},
+	}
 
 	query := &FakeQuery{
 		FakeIter: &FakeIter{},
@@ -179,11 +181,12 @@ func (b *FakeBulk) Update(pairs ...interface{}) {}
 func (b *FakeBulk) Upsert(pairs ...interface{}) {}
 
 type FakePipe struct {
+	FakeIter *FakeIter
 	mock.Mock
 }
 
 func (b *FakePipe) Iter() godb.Iter {
-	return b.Called().Get(0).(godb.Iter)
+	return b.FakeIter
 }
 
 func (b *FakePipe) All(result interface{}) error {
