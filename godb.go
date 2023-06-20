@@ -107,6 +107,8 @@ type Pipe interface {
 	One(result interface{}) error
 
 	Iter() Iter
+
+	AllowDiskUse() Pipe
 }
 
 // Config is a configuration object used for the communication with
