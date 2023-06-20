@@ -381,7 +381,7 @@ func (p *pipe) Iter() godb.Iter {
 	}
 }
 
-func (p *pipe) AllowDiskUse() *pipe {
+func (p *pipe) AllowDiskUse() godb.Pipe {
 	p.pipe.AllowDiskUse()
 	return p
 }
