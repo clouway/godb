@@ -185,6 +185,11 @@ type FakePipe struct {
 	mock.Mock
 }
 
+func (b *FakePipe) AllowDiskUse() godb.Pipe {
+	b.Called()
+	return b
+}
+
 func (b *FakePipe) Iter() godb.Iter {
 	return b.FakeIter
 }
