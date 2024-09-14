@@ -9,9 +9,7 @@ import (
 	"github.com/globalsign/mgo"
 )
 
-var (
-	ErrNotFound = mgo.ErrNotFound
-)
+var ErrNotFound = mgo.ErrNotFound
 
 type database struct {
 	mgoSess *mgo.Session
@@ -33,7 +31,6 @@ func NewDatabase(config *godb.Config) (godb.Database, error) {
 	var sess *mgo.Session
 	var err error
 	sess, err = mgo.DialWithInfo(info)
-
 	if err != nil {
 		for attempts := 1; attempts <= config.MaxRetryAttempts; attempts++ {
 			sess, err = mgo.DialWithInfo(info)
@@ -192,6 +189,11 @@ func (c *collection) Clean() error {
 	return err
 }
 
+// Name returns the name of the collection
+func (c *collection) Name() string {
+	return c.coll.Name
+}
+
 func (c *collection) refresh() (*mgo.Session, *mgo.Collection) {
 	sess := c.sess.Copy()
 	coll := c.coll.With(sess)
@@ -221,14 +223,12 @@ func (i *indexer) CreateAll(indexes []godb.Index) error {
 			Background:  true,
 			Sparse:      false,
 		})
-
 		if err != nil {
 			return fmt.Errorf("coult not create index for %v due: %v", i.Key, err)
 		}
 	}
 
 	return nil
-
 }
 
 type query struct {

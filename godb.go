@@ -49,6 +49,9 @@ type Collection interface {
 	Pipe(pipeline interface{}) Pipe
 
 	Clean() error
+
+	// Name returns the name of the collection
+	Name() string
 }
 
 // Indexer is responsible for creation of indexes
