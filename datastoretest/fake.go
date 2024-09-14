@@ -117,6 +117,10 @@ func (c *FakeCollection) Clean() error {
 	return args.Error(0)
 }
 
+func (c *FakeCollection) Name() string {
+	return "fake"
+}
+
 type FakeQuery struct {
 	FakeIter *FakeIter
 	mock.Mock
