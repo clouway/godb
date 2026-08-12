@@ -17,6 +17,19 @@ import (
 
 const (
 	name = "testDb"
+
+	// image is pinned because the database is reached through globalsign/mgo,
+	// which only ever emits the legacy OP_QUERY opcode. MongoDB removed
+	// OP_QUERY commands in 5.1, so an unpinned "mongo:latest" resolves to a
+	// server this package cannot talk to at all.
+	image = "mongo"
+	tag   = "4.4"
+
+	// containerTTL makes the docker daemon kill a container that outlived the
+	// test run. Purge below is the normal path, but a test binary that panics
+	// or is killed never reaches it, and every leaked container holds on to its
+	// data volumes.
+	containerTTL = 600
 )
 
 var (
@@ -53,22 +66,30 @@ func NewDatabase() *DB {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	resource, err := pool.Run("mongo", "", nil)
+	resource, err := pool.Run(image, tag, nil)
 	if err != nil {
 		log.Fatalf("Could not start resource: %s", err)
 	}
 
+	if err := resource.Expire(containerTTL); err != nil {
+		log.Printf("could not set the expiration of the container, it will have to be removed by hand if the run is interrupted: %v", err)
+	}
+
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	if err := pool.Retry(func() error {
-		var err error
-		db, err := mgo.Dial(fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")))
+		sess, err := mgo.Dial(fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")))
 		if err != nil {
 			return err
 		}
+		defer sess.Close()
 
-		return db.Ping()
+		return sess.Ping()
 	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		// Without this the container is left running: Fatalf exits the process
+		// before any test can reach Close, and nothing else ever purges it.
+		pool.Purge(resource)
+
+		log.Fatalf("Could not connect to the database in the container: %s", err)
 	}
 
 	db := NewDatabaseWithHost(fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")))
@@ -123,7 +144,12 @@ func (db *DB) Close() {
 
 	db.Clean()
 	db.DropDatabase()
-	db.Close()
+
+	// Explicitly the embedded database: an unqualified db.Close() resolves back
+	// to this method, which re-enters, drops instances to -1 and returns on the
+	// guard above without ever closing the session - and leaves the counter
+	// negative, so a later NewDatabase hands back this closed instance.
+	db.Database.Close()
 
 	if db.resource != nil {
 		db.pool.Purge(db.resource)
